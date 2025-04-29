@@ -1,9 +1,8 @@
 const fs = require('fs');
 const readline = require('readline');
-const { sendProgressUpdate } = require('./bot');
 
 // Function to remove duplicates from large files efficiently
-function removeDuplicates(inputPath, outputPath, telegramId) {
+function removeDuplicates(inputPath, outputPath, chatId) {
     return new Promise((resolve, reject) => {
         const readStream = fs.createReadStream(inputPath, { encoding: 'utf8' });
         const writeStream = fs.createWriteStream(outputPath);
@@ -28,16 +27,16 @@ function removeDuplicates(inputPath, outputPath, telegramId) {
                     writeStream.write(line + '\n');
                 }
             }
-            
+
             processedLines++;
             // Send progress updates after every 1000 lines processed
             if (processedLines % 1000 === 0) {
-                sendProgressUpdate(`Processing: ${processedLines}/${totalLines} lines...`, telegramId);
+                sendProgressUpdate(`Processing: ${processedLines}/${totalLines} lines...`, chatId);
             }
         });
 
         rl.on('close', () => {
-            sendProgressUpdate('Cleaning complete! Sending back your cleaned file...', telegramId);
+            sendProgressUpdate('Cleaning complete! Sending back your cleaned file...', chatId);
             resolve();
         });
 
@@ -45,6 +44,10 @@ function removeDuplicates(inputPath, outputPath, telegramId) {
             reject(err);
         });
     });
+}
+
+function sendProgressUpdate(message, chatId) {
+    bot.sendMessage(chatId, message);
 }
 
 module.exports = { removeDuplicates };
