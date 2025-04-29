@@ -3,30 +3,39 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const { removeDuplicates } = require('./utils');
+const { sendProgressUpdate } = require('./bot');
 
 const app = express();
-const upload = multer({ dest: 'data/' });
+const dataDir = path.join(__dirname, 'data');
+
+// Create the "data" folder if it doesn't exist
+if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir);
+}
+
+const upload = multer({ dest: dataDir });
 
 app.use(express.static('public'));
 
-// Endpoint for file upload and cleaning
-app.post('/upload', upload.single('file'), (req, res) => {
+// Route for file upload and cleaning
+app.post('/upload', upload.single('file'), async (req, res) => {
     const { filename, path: filePath } = req.file;
-    const outputPath = `data/cleaned_${Date.now()}_${filename}`;
+    const outputPath = path.join(dataDir, `cleaned_${Date.now()}_${filename}`);
     
-    removeDuplicates(filePath, outputPath)
-        .then(() => {
-            res.download(outputPath, (err) => {
-                if (err) {
-                    console.error(err);
-                    res.status(500).send('Error processing file.');
-                }
-            });
-        })
-        .catch(err => {
-            res.status(500).send('Error cleaning file.');
-            console.error(err);
+    sendProgressUpdate('File uploaded. Cleaning process started...', req.body.telegramId);
+
+    try {
+        await removeDuplicates(filePath, outputPath, req.body.telegramId); // Pass telegramId for progress updates
+        res.download(outputPath, (err) => {
+            if (err) {
+                console.error(err);
+                res.status(500).send('Error processing file.');
+            }
         });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Error cleaning file.');
+    }
 });
 
 // Root route to serve HTML page
