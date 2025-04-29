@@ -1,0 +1,20 @@
+{
+  "name": "duplicate-remover-bot",
+  "version": "1.0.0",
+  "description": "A duplicate remover tool with Telegram bot integration",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "multer": "^1.4.2",
+    "node-telegram-bot-api": "^0.50.0"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": "14.x"
+  },
+  "author": "Lord Sam",
+  "license": "MIT"
+}
